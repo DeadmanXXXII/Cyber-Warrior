@@ -36,6 +36,7 @@ jobs:
       # --- Linux system deps ---
       # webkit/gtk for eframe's native file dialogs (rfd) and window chrome,
       # libpcap for Network Monitor's packet capture, openssl for reqwest/lettre TLS.
+      
       - name: Install Linux build dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -52,6 +53,7 @@ jobs:
       # SDK's Packet.lib at *compile* time (separate from the Npcap runtime
       # driver a user installs to actually capture packets at runtime).
       # This downloads the free SDK zip and points the linker at it.
+      
       - name: Install Npcap SDK (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
@@ -72,12 +74,7 @@ jobs:
           cp target/release/cyberwarrior dist/cyberwarrior-linux/cyberwarrior-bin
           cp assets/icon.png dist/cyberwarrior-linux/
 
-          # egui's clipboard support (via arboard) links against libxdo at
-          # runtime. It's present on this runner but NOT guaranteed on an
-          # end user's machine, which would otherwise fail at launch with
-          # "libxdo.so.3: cannot open shared object file". Bundle the .so
-          # next to the binary and point LD_LIBRARY_PATH at it via a small
-          # launcher, so nobody has to apt-install anything.
+   
           LIBXDO_PATH=$(ldconfig -p | grep 'libxdo\.so\.3' | awk '{print $NF}' | head -n1)
           if [ -n "$LIBXDO_PATH" ]; then
             cp "$LIBXDO_PATH" dist/cyberwarrior-linux/
@@ -105,6 +102,14 @@ jobs:
           EOF
           tar -czf dist/CyberWarrior-linux.tar.gz -C dist cyberwarrior-linux
 
+#       # egui's clipboard support (via arboard) links against libxdo at
+          # runtime. It's present on this runner but NOT guaranteed on an
+          # end user's machine, which would otherwise fail at launch with
+          # libxdo.so.3: cannot open shared object file. Bundle the .so
+          # next to the binary and point LD_LIBRARY_PATH at it via a small
+          # launcher, so nobody has to apt-install anything.
+        
+
       - name: Package macOS (.app bundle)
         if: matrix.os == 'macos-latest'
         run: |
@@ -113,8 +118,7 @@ jobs:
           cp target/release/cyberwarrior "$APP/Contents/MacOS/CyberWarrior"
           chmod +x "$APP/Contents/MacOS/CyberWarrior"
 
-          # Build a proper .icns from the source PNG so it shows correctly
-          # in the Dock/Finder, not just as the raw square PNG.
+      
           mkdir icon.iconset
           sips -z 16 16     assets/icon.png --out icon.iconset/icon_16x16.png
           sips -z 32 32     assets/icon.png --out icon.iconset/icon_16x16@2x.png
@@ -146,6 +150,11 @@ jobs:
           EOF
 
           ditto -c -k --sequesterRsrc --keepParent "$APP" dist/CyberWarrior-macos.zip
+ 
+ #    # Build a proper .icns from the source PNG so it shows correctly
+          # in the Dock/Finder, not just as the raw square PNG.
+         
+        
         # Note: this .app is unsigned. On first launch, macOS Gatekeeper will
         # block it ("can't be opened because Apple cannot check it for
         # malicious software") until the person right-clicks → Open, or an
@@ -161,6 +170,7 @@ jobs:
           Copy-Item target\release\cyberwarrior.exe dist\CyberWarrior-windows\
           Copy-Item assets\icon.png dist\CyberWarrior-windows\
           Compress-Archive -Path dist\CyberWarrior-windows\* -DestinationPath dist\CyberWarrior-windows.zip
+       
         # Note: Network Monitor's packet capture also needs the Npcap
         # *runtime* driver installed on the machine running the app (not
         # just the SDK used to build it) — https://npcap.com/#download.
@@ -211,6 +221,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path $bundleStage | Out-Null
           Copy-Item dist\CyberWarrior-x64.appx $bundleStage\
           & $makeappx bundle /d $bundleStage /p dist\CyberWarrior.appxbundle /o
+       
         # This produces an UNSIGNED .appxbundle. That's fine for Partner
         # Center upload (it signs on ingestion) but Windows won't install
         # it directly on a test machine without either the placeholder-cert
