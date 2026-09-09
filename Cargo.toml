@@ -1,0 +1,68 @@
+[package]
+name = "cyberwarrior"
+version = "0.2.0"
+edition = "2021"
+description = "CyberWarrior — a defensive security dashboard for home and small-business systems."
+license = "MIT"
+
+[[bin]]
+name = "cyberwarrior"
+path = "src/main.rs"
+
+[dependencies]
+eframe = "0.27"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+regex = "1"
+walkdir = "2"
+dirs = "5"
+rfd = "0.14"
+
+# Parses Nmap/Nessus/OpenVAS/Burp XML exports for the Scan Reports tab.
+roxmltree = "0.20"
+
+# Decodes the app icon (assets/icon.png) at startup for the window/tray icon.
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+# Renders the logo inline in the sidebar via egui::include_image!.
+egui_extras = { version = "0.27", features = ["all_loaders"] }
+
+# Line charts for the Trends tab.
+egui_plot = "0.27"
+
+# Device hostname for the Fleet tab's status files.
+gethostname = "0.4"
+
+# System tray icon for background/continuous-monitoring mode.
+tray-icon = "0.14"
+
+# PDF report export (pure Rust, no system Ghostscript/wkhtmltopdf needed).
+printpdf = "0.7"
+
+# CSV report export.
+csv = "1"
+
+# SMTP email alerts (rustls, no OpenSSL toolchain needed — matches reqwest's setup).
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "builder", "rustls-tls"] }
+
+# Networking for the SIEM feed downloader — rustls avoids needing an OpenSSL toolchain installed.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls", "json"] }
+
+# Packet capture for the network monitor / lightweight IDS.
+# Requires libpcap (Linux/macOS) or Npcap with the SDK (Windows) to be installed at build time.
+pnet = "0.34"
+
+[target.'cfg(windows)'.dependencies]
+# Reads the Windows uninstall registry keys for the vulnerability scanner's
+# installed-software inventory.
+winreg = "0.52"
+
+# Lets us probe for wpcap.dll (Npcap) with LoadLibraryEx *before* calling
+# into pnet's packet-capture code, instead of finding out it's missing via
+# an unrecoverable exception. Pairs with the delay-load linker flags in
+# build.rs — see modules/packet_monitor.rs::npcap_available().
+libloading = "0.8"
+
+[profile.release]
+opt-level = 2
